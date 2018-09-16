@@ -10,11 +10,18 @@ import UIKit
 
 class ToDoeyViewController: UITableViewController {
 
-    let itemArray = ["Dyary", "Raoof", "Bayz"]
+    var itemArray = ["Dyary", "Raoof", "Bayz"]
+    let defaults = UserDefaults.standard
+    
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String]{
+            itemArray = items
+        }
     }
 
     
@@ -44,7 +51,36 @@ class ToDoeyViewController: UITableViewController {
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    @IBAction func addButton(_ sender: UIBarButtonItem) {
+        
+        var textField = UITextField()
+        
+        let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: "Add", style: .default) { (action) in
+            
+           self.itemArray.append(textField.text!)
+            
+            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
+            
+            
+            self.tableView.reloadData()
+           
+        }
+        
+        
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Write Item"
+           
+        textField = alertTextField
+        }
+        alert.addAction(action)
+        present(alert , animated: true)
+        
+    }
+    
 }
 
-// dummy comment
+
 
