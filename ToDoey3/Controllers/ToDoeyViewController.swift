@@ -10,8 +10,9 @@ import UIKit
 
 class ToDoeyViewController: UITableViewController {
 
+     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     var itemArray = [Item]()
-    let defaults = UserDefaults.standard
+
    
     
     
@@ -21,26 +22,7 @@ class ToDoeyViewController: UITableViewController {
         
         // Do any additional setup after loading the view, typically from a nib.
         
-        
-        
-        if let items = defaults.array(forKey: "ss") as? [Item]{
-            itemArray = items
-        }
-        let arrayItem = Item()
-        arrayItem.title = "Ali"
-        itemArray.append(arrayItem)
-        
-        
-        let arrayItem3 = Item()
-        arrayItem3.title = "ss"
-        itemArray.append(arrayItem3)
-        
-        itemArray.append(arrayItem3)
-        itemArray.append(arrayItem3)
-        itemArray.append(arrayItem3)
-        itemArray.append(arrayItem3)
-        itemArray.append(arrayItem3)
-        itemArray.append(arrayItem3)
+      loadData()
         
     }
 
@@ -55,28 +37,24 @@ class ToDoeyViewController: UITableViewController {
         
         cell.accessoryType = itemArray[indexPath.row].done == true ? .checkmark : .none
         
-       
-        
-       
-       
         return cell
-        
     }
+    
+    
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
      
         
     
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        
-        
-        tableView.reloadData()
-        
+        saveItems()
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
+    
+    
     @IBAction func addButton(_ sender: UIBarButtonItem) {
-        
+       
         var textField = UITextField()
         
         let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
@@ -88,13 +66,10 @@ class ToDoeyViewController: UITableViewController {
             
            self.itemArray.append(item)
             
-           self.defaults.set(self.itemArray, forKey: "s")
-           
-           
-     
-           
+            self.tableView.reloadData()
         }
         
+        saveItems()
         
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Write Item"
@@ -106,7 +81,39 @@ class ToDoeyViewController: UITableViewController {
         
     }
     
+    
+    func saveItems(){
+        
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+            
+            
+        }catch{
+            print(error)
+        }
+        
+        tableView.reloadData()
+    }
+    
+    func loadData (){
+        
+                if let data = try? Data(contentsOf: dataFilePath!){
+                let decoder = PropertyListDecoder()
+                   
+                    do {
+                          itemArray = try decoder.decode([Item].self, from: data)
+                        
+                    }
+                    catch{
+                     
+                        print(error)
+                    }
+        
+    }
+    }
+
+
+
 }
-
-
-
