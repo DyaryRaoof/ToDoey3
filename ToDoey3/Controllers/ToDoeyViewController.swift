@@ -120,6 +120,7 @@ class ToDoeyViewController: UITableViewController {
        // let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate, categoryPredicate])
         
       //  request.predicate = compoundPredicate
+        //test
         
         if let additionalPredicate = predicate {
             request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
