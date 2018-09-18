@@ -1,5 +1,5 @@
 //
-//  Data.swift
+//  Categories.swift
 //  ToDoey3
 //
 //  Created by Dyary Raoof Bayz on 9/18/18.
@@ -7,3 +7,10 @@
 //
 
 import Foundation
+import RealmSwift
+
+class Category : Object {
+    @objc dynamic var name : String = ""
+    
+    let items = List<Item>()
+}

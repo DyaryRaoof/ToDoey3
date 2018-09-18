@@ -7,20 +7,21 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class ToDoeyViewController: UITableViewController {
 
      let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
 
-    var itemArray = [Item]()
-    var selectedCategory : Categories? {
+    let realm =  try! Realm()
+    
+    var todoItems : Results<Item>?
+    
+    var selectedCategory : Category? {
         didSet{
-            loadData()
+           loadData()
         }
     }
-    
- let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     
     
@@ -29,21 +30,28 @@ class ToDoeyViewController: UITableViewController {
         
         // Do any additional setup after loading the view, typically from a nib.
         
-     loadData()
+    // loadData()
         
-        print(dataFilePath)
+        
     }
 
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemArray.count
+        return todoItems?.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoeyCell", for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row].title
         
-        cell.accessoryType = itemArray[indexPath.row].done == true ? .checkmark : .none
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoeyCell", for: indexPath)
+        
+        
+        
+        if let item = todoItems?[indexPath.row]{
+            cell.textLabel?.text = item.title
+            cell.accessoryType = item.done ? .checkmark : .none
+        }else {
+            cell.textLabel?.text = "No Items"
+        }
         
         return cell
     }
@@ -51,21 +59,24 @@ class ToDoeyViewController: UITableViewController {
     
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-     
-        
-        //itemArray[indexPath.row].setValue("Completeed", forKey: "title")
-        // the above method can be used for updating CRUD Coredata
-        
-        //using this we can delete items from our CoreData
-     //   context.delete(itemArray[indexPath.row])
-      //  itemArray.remove(at: indexPath.row)
-        
-         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        
-        saveItems()
+   
+        if let item = todoItems?[indexPath.row] {
+           
+            do {
+                try realm.write {
+                  item.done = !item.done
+                    
+                  
+                }
+            }catch {
+                print("Coulnd't save data due to \(error)")
+            }
+           
+        }
+     tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
     }
-    
+   
     
     
     @IBAction func addButton(_ sender: UIBarButtonItem) {
@@ -77,19 +88,25 @@ class ToDoeyViewController: UITableViewController {
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             
            
-            
-            let item = Item(context: self.context)
-            
-            item.title = textField.text!
-            item.done = false
-            item.parentCategory = self.selectedCategory
-            
-           self.itemArray.append(item)
+            if let currentCategory = self.selectedCategory {
+               
+                
+                do {
+                    try self.realm.write {
+                        let item = Item()
+                        item.title = textField.text!
+                        currentCategory.items.append(item)
+                    }
+                }catch {
+                    print("Error saving new item\(error)")
+                }
+            }
+           
             
             self.tableView.reloadData()
         }
         
-        saveItems()
+        
         
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Write Item"
@@ -102,45 +119,18 @@ class ToDoeyViewController: UITableViewController {
     }
     
     
-    func saveItems(){
-       
-        do {
-             try context.save()
-        }catch{
-            print(" Error saving context \(error)")
-        }
-        
-        tableView.reloadData()
-    }
-    
-    func loadData (with request : NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil){
-    
-        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
-        
-       // let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate, categoryPredicate])
-        
-      //  request.predicate = compoundPredicate
-        //test
-        
-        if let additionalPredicate = predicate {
-            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
-        }else {
-            request.predicate = categoryPredicate
-        }
-        
-    do{
-        itemArray = try context.fetch(request)
-    } catch {
-        print("Error ! couldn't load request int to context do to \(error)")
-    }
-    
+    func loadData (){
+    todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
     
 
 }
+ 
 
 //MARK: - SearchBar
+/*
+ 
 extension ToDoeyViewController : UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         
@@ -164,3 +154,5 @@ extension ToDoeyViewController : UISearchBarDelegate {
         }
     }
 }
+ 
+ */
