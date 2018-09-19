@@ -95,6 +95,8 @@ class ToDoeyViewController: UITableViewController {
                     try self.realm.write {
                         let item = Item()
                         item.title = textField.text!
+                        item.dateCreated = Date()
+                        
                         currentCategory.items.append(item)
                     }
                 }catch {
@@ -129,18 +131,13 @@ class ToDoeyViewController: UITableViewController {
  
 
 //MARK: - SearchBar
-/*
+
  
 extension ToDoeyViewController : UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+       todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text).sorted(byKeyPath: "dateCreated", ascending: false)
         
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
-        let predicate  = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-        
-       
-        request.sortDescriptors  = [NSSortDescriptor(key: "title", ascending: true)]
-       loadData(with: request, predicate: predicate)
-    
+        tableView.reloadData()
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -155,4 +152,4 @@ extension ToDoeyViewController : UISearchBarDelegate {
     }
 }
  
- */
+
